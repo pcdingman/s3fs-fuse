@@ -97,6 +97,9 @@ std::string endpoint              = "us-east-1";
 s3fs_log_level debug_level        = S3FS_LOG_CRIT;
 const char*    s3fs_log_nest[S3FS_LOG_NEST_MAX] = {"", "  ", "    ", "      "};
 
+unsigned int shard_count          = 1;
+unsigned int shard_index          = 1;
+
 //-------------------------------------------------------------------
 // Static valiables
 //-------------------------------------------------------------------
@@ -4245,6 +4248,24 @@ static int my_fuse_opt_proc(void* data, const char* arg, int key, struct fuse_ar
       }
       is_s3fs_gid = true;
       return 1; // continue for fuse option
+    }
+    if(0 == STR2NCMP(arg, "shard_count=")){
+      unsigned long n = strtoul(strchr(arg, '=') + sizeof(char), NULL, 0);
+      if(shard_count == 0){
+        S3FS_PRN_EXIT("shard_count must be an integer > 0.");
+        return -1;
+      }
+      shard_count = n;
+      return 0;
+    }
+    if(0 == STR2NCMP(arg, "shard_index=")){
+      unsigned long n = strtoul(strchr(arg, '=') + sizeof(char), NULL, 0);
+      if(shard_count == 0){
+        S3FS_PRN_EXIT("shard_index must be an integer from 1 to shard_count.");
+        return -1;
+      }
+      shard_index = n;
+      return 0;
     }
     if(0 == STR2NCMP(arg, "umask=")){
       s3fs_umask = strtol(strchr(arg, '=') + sizeof(char), NULL, 0);

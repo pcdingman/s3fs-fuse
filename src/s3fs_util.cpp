@@ -36,6 +36,7 @@
 #include <sstream>
 #include <map>
 #include <list>
+#include <tr1/functional>
 
 #include "common.h"
 #include "s3fs_util.h"
@@ -72,6 +73,19 @@ inline headers_t::const_iterator find_content_type(headers_t& meta)
     }
   }
   return iter;
+}
+
+static bool check_shard(const char* name)
+{
+  std::string n = name;
+
+  std::size_t h = std::tr1::hash<std::string>()(n);
+
+  unsigned int shard = h % shard_count;
+
+  shard = shard == 0 ? shard_count : shard;
+
+  return shard == shard_index;  
 }
 
 //-------------------------------------------------------------------
@@ -145,7 +159,9 @@ bool S3ObjList::insert(const char* name, const char* etag, bool is_dir)
     if(etag){
       newobject.etag = etag;
     }
-    objects[newname] = newobject;
+    if (is_dir || check_shard(newname.c_str())) {
+      objects[newname] = newobject;
+    }
   }
 
   // add normalization
@@ -173,7 +189,9 @@ bool S3ObjList::insert_nomalized(const char* name, const char* normalized, bool 
     s3obj_entry newobject;
     newobject.normalname = normalized;
     newobject.is_dir     = is_dir;
-    objects[name]        = newobject;
+    if (is_dir || check_shard(name)) {
+      objects[name]        = newobject;
+    }
   }
   return true;
 }

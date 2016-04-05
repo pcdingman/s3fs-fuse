@@ -144,6 +144,9 @@ extern std::string    endpoint;
 extern s3fs_log_level debug_level;
 extern const char*    s3fs_log_nest[S3FS_LOG_NEST_MAX];
 
+extern unsigned int shard_count;
+extern unsigned int shard_index;
+
 #endif // S3FS_COMMON_H_
 
 /*
